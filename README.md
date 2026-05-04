@@ -1,4 +1,4 @@
-# Light/Dark Frontend
+Frontend Emprende+
 
 Projeto React + Vite + Tailwind para interface com alternância de tema claro/escuro.
 
