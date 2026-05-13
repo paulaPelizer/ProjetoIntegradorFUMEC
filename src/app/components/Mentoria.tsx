@@ -1,52 +1,32 @@
-import { Calendar, MessageCircle, Video, Clock, Star } from 'lucide-react';
+import { Calendar, MessageCircle, Video, Clock, Star, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { mentoriaService, type Mentor, type MentoringSession } from '../../services/mentoriaService';
 
 export function Mentoria() {
-  const mentor = {
-    name: 'Dr. Carlos Silva',
-    role: 'Mentor Sênior',
-    expertise: 'Estratégia de Negócios & Inovação',
-    rating: 4.9,
-    totalSessions: 250,
-    avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-  };
+  const [mentor, setMentor] = useState<Mentor | null>(null);
+  const [upcomingSessions, setUpcomingSessions] = useState<MentoringSession[]>([]);
+  const [pastSessions, setPastSessions] = useState<MentoringSession[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const upcomingSessions = [
-    {
-      date: '2026-05-05',
-      time: '15:00',
-      duration: '60 min',
-      topic: 'Revisão do Plano de Negócios',
-      type: 'video',
-    },
-    {
-      date: '2026-05-12',
-      time: '10:00',
-      duration: '45 min',
-      topic: 'Estratégias de Marketing Digital',
-      type: 'video',
-    },
-  ];
+  useEffect(() => {
+    mentoriaService
+      .getMentoria()
+      .then((data) => {
+        setMentor(data.mentor);
+        setUpcomingSessions(data.upcomingSessions ?? []);
+        setPastSessions(data.pastSessions ?? []);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
-  const pastSessions = [
-    {
-      date: '2026-04-28',
-      topic: 'Análise SWOT e Posicionamento',
-      rating: 5,
-      notes: 'Excelente sessão sobre identificação de oportunidades de mercado.',
-    },
-    {
-      date: '2026-04-21',
-      topic: 'Definição de Missão e Visão',
-      rating: 5,
-      notes: 'Esclarecimentos importantes sobre propósito e direcionamento estratégico.',
-    },
-    {
-      date: '2026-04-14',
-      topic: 'Apresentação Inicial',
-      rating: 4,
-      notes: 'Primeira sessão de mentoria. Definimos objetivos e expectativas.',
-    },
-  ];
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--coral-neon)]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -59,6 +39,7 @@ export function Mentoria() {
       </div>
 
       {/* Mentor Profile */}
+      {mentor && (
       <div className="bg-gradient-to-br from-[var(--skin-tone-light)] to-[var(--skin-tone)] rounded-xl p-6 border border-[var(--skin-tone-dark)]/30 shadow-md">
         <div className="flex items-start gap-6">
           <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-white shadow-lg flex-shrink-0">
@@ -84,6 +65,7 @@ export function Mentoria() {
           </button>
         </div>
       </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Upcoming Sessions */}
@@ -160,7 +142,7 @@ export function Mentoria() {
                     </div>
                   </div>
                   <div className="flex items-center gap-1">
-                    {Array.from({ length: session.rating }).map((_, i) => (
+                    {Array.from({ length: session.rating ?? 0 }).map((_, i) => (
                       <Star key={i} className="w-4 h-4 text-[var(--salmon-neon)] fill-[var(--salmon-neon)]" />
                     ))}
                   </div>

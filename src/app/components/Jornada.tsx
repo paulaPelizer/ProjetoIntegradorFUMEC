@@ -1,68 +1,22 @@
-import { CheckCircle, Circle, Lock, PlayCircle } from 'lucide-react';
+import { CheckCircle, Circle, Lock, Loader2, PlayCircle } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { jornadaService, type JornadaModule, type JornadaProgress } from '../../services/jornadaService';
 
 export function Jornada() {
-  const modules = [
-    {
-      id: 1,
-      title: 'Planejamento Estratégico',
-      description: 'Intenção estratégica: missão, visão, valores, objetivos e públicos',
-      status: 'completed',
-      progress: 100,
-      lessons: 12,
-      completedLessons: 12,
-      duration: '4 semanas',
-    },
-    {
-      id: 2,
-      title: 'Análise de Mercado',
-      description: 'Pesquisa e análise do mercado, concorrência e oportunidades',
-      status: 'in-progress',
-      progress: 65,
-      lessons: 10,
-      completedLessons: 7,
-      duration: '3 semanas',
-    },
-    {
-      id: 3,
-      title: 'Modelo de Negócio',
-      description: 'Canvas, proposta de valor e estruturação do modelo de negócio',
-      status: 'in-progress',
-      progress: 30,
-      lessons: 15,
-      completedLessons: 4,
-      duration: '5 semanas',
-    },
-    {
-      id: 4,
-      title: 'Marketing e Vendas',
-      description: 'Estratégias de marketing digital e técnicas de vendas',
-      status: 'locked',
-      progress: 0,
-      lessons: 18,
-      completedLessons: 0,
-      duration: '6 semanas',
-    },
-    {
-      id: 5,
-      title: 'Gestão Financeira',
-      description: 'Planejamento financeiro, fluxo de caixa e análise de investimentos',
-      status: 'locked',
-      progress: 0,
-      lessons: 14,
-      completedLessons: 0,
-      duration: '5 semanas',
-    },
-    {
-      id: 6,
-      title: 'Operações e Processos',
-      description: 'Gestão de operações, processos e qualidade',
-      status: 'locked',
-      progress: 0,
-      lessons: 12,
-      completedLessons: 0,
-      duration: '4 semanas',
-    },
-  ];
+  const [modules, setModules] = useState<JornadaModule[]>([]);
+  const [progress, setProgress] = useState<JornadaProgress | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    jornadaService
+      .getJornada()
+      .then((data) => {
+        setModules(data.modules ?? []);
+        setProgress(data.progress ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
 
   const getStatusIcon = (status: string) => {
     switch (status) {
@@ -76,6 +30,14 @@ export function Jornada() {
         return <Circle className="w-8 h-8 text-gray-300" />;
     }
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--coral-neon)]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -92,15 +54,20 @@ export function Jornada() {
         <div className="flex items-center justify-between mb-4">
           <div>
             <div className="text-sm text-[var(--graphite)]/70 mb-1">Progresso Total da Jornada</div>
-            <div className="text-3xl font-bold text-[var(--graphite)]">45%</div>
+            <div className="text-3xl font-bold text-[var(--graphite)]">{progress?.totalProgress ?? 0}%</div>
           </div>
           <div className="text-right">
             <div className="text-sm text-[var(--graphite)]/70 mb-1">Módulos Concluídos</div>
-            <div className="text-2xl font-bold text-[var(--coral-neon)]">1/6</div>
+            <div className="text-2xl font-bold text-[var(--coral-neon)]">
+              {progress?.completedModules ?? 0}/{progress?.totalModules ?? 0}
+            </div>
           </div>
         </div>
         <div className="h-3 bg-white/80 rounded-full overflow-hidden shadow-inner">
-          <div className="h-full bg-[var(--coral-neon)] w-[45%] shadow-sm"></div>
+          <div
+            className="h-full bg-[var(--coral-neon)] shadow-sm"
+            style={{ width: `${progress?.totalProgress ?? 0}%` }}
+          ></div>
         </div>
       </div>
 

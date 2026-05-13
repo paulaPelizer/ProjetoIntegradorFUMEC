@@ -1,60 +1,37 @@
-import { MessageSquare, Users, ThumbsUp, Share2, Clock } from 'lucide-react';
+import { MessageSquare, Users, ThumbsUp, Share2, Clock, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  comunidadeService,
+  type Discussion,
+  type TrendingTopic,
+  type CommunityStats,
+} from '../../services/comunidadeService';
 
 export function Comunidade() {
-  const discussions = [
-    {
-      id: 1,
-      author: 'Maria Santos',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=400',
-      title: 'Como começar um negócio online com baixo investimento?',
-      category: 'Empreendedorismo',
-      replies: 24,
-      likes: 45,
-      time: 'Há 2 horas',
-      excerpt: 'Estou pensando em começar um negócio de venda de produtos artesanais pela internet...',
-    },
-    {
-      id: 2,
-      author: 'João Silva',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=400',
-      title: 'Dicas para melhorar presença nas redes sociais',
-      category: 'Marketing Digital',
-      replies: 18,
-      likes: 32,
-      time: 'Há 5 horas',
-      excerpt: 'Gostaria de compartilhar algumas estratégias que funcionaram para mim...',
-    },
-    {
-      id: 3,
-      author: 'Ana Costa',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=400',
-      title: 'Planilha de controle financeiro para pequenos negócios',
-      category: 'Gestão Financeira',
-      replies: 56,
-      likes: 89,
-      time: 'Há 1 dia',
-      excerpt: 'Criei uma planilha simples para controlar receitas e despesas. Compartilho aqui...',
-    },
-    {
-      id: 4,
-      author: 'Pedro Oliveira',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=400',
-      title: 'Experiências com marketplace: Facebook x Instagram',
-      category: 'E-commerce',
-      replies: 31,
-      likes: 67,
-      time: 'Há 2 dias',
-      excerpt: 'Alguém mais teve experiência vendendo pelo marketplace do Facebook?...',
-    },
-  ];
+  const [discussions, setDiscussions] = useState<Discussion[]>([]);
+  const [trendingTopics, setTrendingTopics] = useState<TrendingTopic[]>([]);
+  const [communityStats, setCommunityStats] = useState<CommunityStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const trendingTopics = [
-    { name: 'Marketing Digital', count: 234 },
-    { name: 'Gestão Financeira', count: 189 },
-    { name: 'Redes Sociais', count: 156 },
-    { name: 'E-commerce', count: 142 },
-    { name: 'Planejamento', count: 128 },
-  ];
+  useEffect(() => {
+    comunidadeService
+      .getComunidade()
+      .then((data) => {
+        setDiscussions(data.discussions ?? []);
+        setTrendingTopics(data.trendingTopics ?? []);
+        setCommunityStats(data.stats ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--coral-neon)]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -133,15 +110,23 @@ export function Comunidade() {
             </div>
             <div className="space-y-3">
               <div>
-                <div className="text-2xl font-bold text-[var(--graphite)]">1.247</div>
+                <div className="text-2xl font-bold text-[var(--graphite)]">
+                  {communityStats?.activeMembers.toLocaleString('pt-BR') ?? '—'}
+                </div>
                 <div className="text-sm text-[var(--graphite)]/70">Membros ativos</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-[var(--graphite)]">342</div>
+                <div className="text-2xl font-bold text-[var(--graphite)]">
+                  {communityStats?.activeDiscussions ?? '—'}
+                </div>
                 <div className="text-sm text-[var(--graphite)]/70">Discussões ativas</div>
               </div>
               <div>
-                <div className="text-2xl font-bold text-[var(--graphite)]">2.8k</div>
+                <div className="text-2xl font-bold text-[var(--graphite)]">
+                  {communityStats ? (communityStats.weeklyReplies >= 1000
+                    ? `${(communityStats.weeklyReplies / 1000).toFixed(1)}k`
+                    : communityStats.weeklyReplies) : '—'}
+                </div>
                 <div className="text-sm text-[var(--graphite)]/70">Respostas esta semana</div>
               </div>
             </div>

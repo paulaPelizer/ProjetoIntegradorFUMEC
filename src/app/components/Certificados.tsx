@@ -1,80 +1,37 @@
-import { Award, Download, Share2, CheckCircle, Clock } from 'lucide-react';
+import { Award, Download, Share2, CheckCircle, Clock, Loader2 } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  certificadosService,
+  type Certificate,
+  type Achievement,
+  type CertificadosStats,
+} from '../../services/certificadosService';
 
 export function Certificados() {
-  const certificates = [
-    {
-      id: 1,
-      title: 'Planejamento Estratégico',
-      module: 'Módulo Completo',
-      issueDate: '2026-04-28',
-      hours: 40,
-      status: 'completed',
-      progress: 100,
-    },
-    {
-      id: 2,
-      title: 'Análise de Mercado',
-      module: 'Em andamento',
-      issueDate: null,
-      hours: 30,
-      status: 'in-progress',
-      progress: 65,
-    },
-    {
-      id: 3,
-      title: 'Modelo de Negócio',
-      module: 'Em andamento',
-      issueDate: null,
-      hours: 45,
-      status: 'in-progress',
-      progress: 30,
-    },
-  ];
+  const [certificates, setCertificates] = useState<Certificate[]>([]);
+  const [achievements, setAchievements] = useState<Achievement[]>([]);
+  const [stats, setStats] = useState<CertificadosStats | null>(null);
+  const [loading, setLoading] = useState(true);
 
-  const achievements = [
-    {
-      icon: '🎯',
-      title: 'Primeiro Módulo',
-      description: 'Complete seu primeiro módulo',
-      earned: true,
-      date: '2026-04-28',
-    },
-    {
-      icon: '🔥',
-      title: 'Sequência de 7 Dias',
-      description: 'Estude por 7 dias consecutivos',
-      earned: true,
-      date: '2026-04-25',
-    },
-    {
-      icon: '⭐',
-      title: 'Mentor Ativo',
-      description: 'Participe de 5 sessões de mentoria',
-      earned: true,
-      date: '2026-04-21',
-    },
-    {
-      icon: '💬',
-      title: 'Participante Ativo',
-      description: 'Faça 10 contribuições na comunidade',
-      earned: false,
-      progress: 7,
-    },
-    {
-      icon: '🎓',
-      title: 'Mestre Empreendedor',
-      description: 'Complete todos os módulos',
-      earned: false,
-      progress: 17,
-    },
-    {
-      icon: '🚀',
-      title: 'Aprendiz Dedicado',
-      description: 'Acumule 100 horas de estudo',
-      earned: false,
-      progress: 48,
-    },
-  ];
+  useEffect(() => {
+    certificadosService
+      .getCertificados()
+      .then((data) => {
+        setCertificates(data.certificates ?? []);
+        setAchievements(data.achievements ?? []);
+        setStats(data.stats ?? null);
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <Loader2 className="w-8 h-8 animate-spin text-[var(--coral-neon)]" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -90,17 +47,17 @@ export function Certificados() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="bg-gradient-to-br from-[var(--coral-neon)] to-[var(--salmon-neon)] rounded-xl p-6 text-white shadow-lg">
           <Award className="w-8 h-8 mb-3" />
-          <div className="text-3xl font-bold mb-1">1</div>
+          <div className="text-3xl font-bold mb-1">{stats?.certificatesEarned ?? 0}</div>
           <div className="text-white/90">Certificado Conquistado</div>
         </div>
         <div className="bg-gradient-to-br from-[var(--salmon-neon)] to-[var(--skin-tone-dark)] rounded-xl p-6 text-white shadow-lg">
           <CheckCircle className="w-8 h-8 mb-3" />
-          <div className="text-3xl font-bold mb-1">3</div>
+          <div className="text-3xl font-bold mb-1">{stats?.achievementsUnlocked ?? 0}</div>
           <div className="text-white/90">Conquistas Desbloqueadas</div>
         </div>
         <div className="bg-gradient-to-br from-[var(--skin-tone-dark)] to-[var(--coral-neon)] rounded-xl p-6 text-white shadow-lg">
           <Clock className="w-8 h-8 mb-3" />
-          <div className="text-3xl font-bold mb-1">48h</div>
+          <div className="text-3xl font-bold mb-1">{stats?.totalStudyHours ?? 0}h</div>
           <div className="text-white/90">Total de Estudo</div>
         </div>
       </div>
